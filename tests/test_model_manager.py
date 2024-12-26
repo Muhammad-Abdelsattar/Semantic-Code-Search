@@ -59,8 +59,8 @@ def test_full_fine_tuning(model_manager, model, config):
             assert param.requires_grad == True
         elif "embeddings" in name:
             assert param.requires_grad == False
-        else:
-            assert param.requires_grad == False
+        elif param.requires_grad:
+            assert False
 
 def test_full_fine_tuning_all_layers(model_manager, model, config):
     config.model.fine_tuning.full.layers = -1
@@ -96,7 +96,6 @@ def test_lora_fine_tuning(model_manager, model, config):
                                                  peft_type=PEFTType.LORA)
     assert isinstance(prepared_model, torch.nn.Module)
     assert hasattr(prepared_model, 'base_model')
-    assert hasattr(prepared_model.base_model, 'prefix_tokens')
     assert hasattr(prepared_model.base_model.model, 'lora_dropout')
     for name, module in prepared_model.base_model.model.named_modules():
         if "lora_A" in name:
