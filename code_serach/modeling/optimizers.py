@@ -22,9 +22,10 @@ class OptimizerFactory:
     @classmethod
     def create_optimizer(cls,
                          model: nn.Module,
-                         config: DictConfig) -> torch.optim.Optimizer:
+                         config: DictConfig,
+                         learning_rate: float) -> torch.optim.Optimizer:
         """Creates an optimizer based on the given configuration."""
-        optimizer_config = config.training.optimizer
+        optimizer_config = config.optimizer_config.optimizer
         optimizer_name = optimizer_config.name.lower()
         optimizer_class = cls.OPTIMIZER_MAPPING.get(optimizer_name)
         if not optimizer_class:
@@ -33,7 +34,7 @@ class OptimizerFactory:
         params = cls._get_parameter_groups(model, optimizer_config.parameter_groups)
         
         optimizer = optimizer_class(params=params,
-                                    lr=optimizer_config.learning_rate,
+                                    lr=learning_rate,
                                     **optimizer_config.optimizer_args)
         return optimizer
 
@@ -42,7 +43,7 @@ class OptimizerFactory:
                          optimizer: torch.optim.Optimizer,
                          config: DictConfig) -> torch.optim.lr_scheduler._LRScheduler:
         """Creates a learning rate scheduler based on the given configuration."""
-        scheduler_config = config.training.scheduler
+        scheduler_config = config.optimizer_config.scheduler
         scheduler_name = scheduler_config.name.lower()
         scheduler_class = cls.SCHEDULER_MAPPING.get(scheduler_name)
         if not scheduler_class:

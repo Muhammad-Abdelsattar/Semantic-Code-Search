@@ -17,10 +17,9 @@ model:
         num_virtual_tokens: 20
         inference_mode: False
         prefix_projection: True
-training:
+optimizer_config:
   optimizer:
     name: "AdamW"
-    learning_rate: 1e-4
     optimizer_args:
       weight_decay: 0.01
       betas: [0.9, 0.999]
