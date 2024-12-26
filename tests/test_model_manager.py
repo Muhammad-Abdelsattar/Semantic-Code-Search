@@ -53,8 +53,13 @@ def test_full_fine_tuning(model_manager, model, config):
     
     assert isinstance(prepared_model, torch.nn.Module)
     
-    # Check if the last 2 layers are trainable
-    trainable_layers = ["encoder.layer.10", "encoder.layer.11"]
+    num_layers = len([name for name in prepared_model.named_modules() if "encoder.layer" in name])
+    
+    if config.model.fine_tuning.full.layers == -1:
+        trainable_layers = [f"encoder.layer.{i}" for i in range(num_layers)]
+    else:
+        trainable_layers = [f"encoder.layer.{num_layers - 1 - i}" for i in range(config.model.fine_tuning.full.layers)]
+    
     for name, param in prepared_model.named_parameters():
         if any(layer in name for layer in trainable_layers):
             assert param.requires_grad == True
