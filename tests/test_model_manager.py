@@ -114,6 +114,7 @@ def test_lora_fine_tuning(model_manager, model, config):
                                                  fine_tuning_type=FineTuningType.PEFT,
                                                  peft_type=PEFTType.LORA)
     assert isinstance(prepared_model, torch.nn.Module)
+    assert hasattr(prepared_model, 'base_model')
     for name, param in prepared_model.named_parameters():
         if "lora_" not in name:
             assert param.requires_grad == False
@@ -124,6 +125,7 @@ def test_prefix_fine_tuning(model_manager, model, config):
                                                  fine_tuning_type=FineTuningType.PEFT,
                                                  peft_type=PEFTType.PREFIX)
     assert isinstance(prepared_model, torch.nn.Module)
+    assert hasattr(prepared_model, 'base_model')
     for name, param in prepared_model.named_parameters():
         if "prefix_" not in name:
             assert param.requires_grad == False
