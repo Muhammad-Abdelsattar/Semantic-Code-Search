@@ -127,7 +127,7 @@ def test_prefix_fine_tuning(model_manager, model, config):
     assert isinstance(prepared_model, torch.nn.Module)
     assert hasattr(prepared_model, 'base_model')
     for name, param in prepared_model.named_parameters():
-        if "prefix_" not in name:
+        if "prompt_encoder" not in name:
             assert param.requires_grad == False
 
 def test_peft_fine_tuning_no_peft_type(model_manager, model, config):
