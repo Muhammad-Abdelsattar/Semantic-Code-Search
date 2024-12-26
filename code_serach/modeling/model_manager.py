@@ -31,14 +31,9 @@ class PEFTConfigFactory:
     def create_config(cls,
                       peft_type: PEFTType,
                       config: DictConfig) -> PeftConfig:
-        try:
-            config_class= cls.PEFT_CONFIG_MAPPING[peft_type]
-            config_key = peft_type.name.lower()
-            return config_class(**getattr(config, config_key))
-        except KeyError:
-            raise ValueError(f"Unsupported PEFT type: {peft_type}")
-        except AttributeError:
-            raise ValueError(f"Configuration for {config_key} not found in config")
+        config_class = cls.PEFT_CONFIG_MAPPING[peft_type]
+        config_key = peft_type.name.lower()
+        return config_class(**getattr(config, config_key))
 
 class FineTuningStrategy(ABC):
     @abstractmethod
@@ -54,30 +49,17 @@ class FullFineTuningStrategy(FineTuningStrategy):
         num_trainable_layers = config.layers
         train_embeddings = config.train_embeddings
         model.requires_grad_(False)
-        if num_trainable_layers > len(model.encoder.layer):
-            print(f"Warning: Number of trainable layers exceeds model layers. \
-                   \nSetting it to {len(model.encoder.layer)}.")
+        if num_trainable_layers == -1:
             model.requires_grad_(True)
-        elif num_trainable_layers == 0:
+        elif num_trainable_layers > 0:
             model.pooler.requires_grad_(True)
-        elif num_trainable_layers == -1:
-            model.requires_grad_(True)
+            for layer in model.encoder.layer[-num_trainable_layers:]:
+                for param in layer.parameters():
+                    param.requires_grad = True
         else:
             model.pooler.requires_grad_(True)
-            self._set_layer_gradients(model, num_trainable_layers)
-        
         model.embeddings.requires_grad_(train_embeddings)
         return model
-    
-    def _set_layer_gradients(self,
-                             model: nn.Module,
-                             num_trainable_layers: int):
-        for layer in model.encoder.layer[-num_trainable_layers:]:
-            for param in layer.parameters():
-                param.requires_grad = True
-        for layer in model.encoder.layer[:-num_trainable_layers]:
-            for param in layer.parameters():
-                param.requires_grad = False
  
 class PEFTFineTuningStrategy(FineTuningStrategy):
     def __init__(self,
@@ -94,43 +76,29 @@ class PEFTFineTuningStrategy(FineTuningStrategy):
 class ModelManager:
     def __init__(self):
         self.strategies = {
-            FineTuningType.FULL: FullFineTuningStrategy(),
-            FineTuningType.PEFT: {
-                PEFTType.LORA: PEFTFineTuningStrategy(PEFTType.LORA),
-                PEFTType.PREFIX: PEFTFineTuningStrategy(PEFTType.PREFIX)
-            }
+            (FineTuningType.FULL, None): FullFineTuningStrategy(),
+            (FineTuningType.PEFT, PEFTType.LORA): PEFTFineTuningStrategy(PEFTType.LORA),
+            (FineTuningType.PEFT, PEFTType.PREFIX): PEFTFineTuningStrategy(PEFTType.PREFIX)
         }
 
     def prepare_model(self,
-                     model: nn.Module, 
+                     model: nn.Module,
                      config: DictConfig,
                      fine_tuning_type: FineTuningType,
-                     peft_type: Optional[PEFTType]=None,
-                     stage: str="fine_tuning") -> nn.Module:
+                     peft_type: Optional[PEFTType] = None,
+                     stage: str = "fine_tuning") -> nn.Module:
         if stage == "fine_tuning":
             model = model.encoder
-            return self._prepare_model_for_fine_tuning(model=model,
-                                                       fine_tuning_type=fine_tuning_type,
-                                                       peft_type=peft_type,
-                                                       config=config)
+            strategy = self.strategies.get((fine_tuning_type, peft_type))
+            if not strategy:
+                raise ValueError(f"Unsupported fine-tuning type: {fine_tuning_type} and peft type: {peft_type}")
+            
+            if fine_tuning_type == FineTuningType.PEFT:
+                return strategy.prepare_model(model, config.peft)
+            else:
+                return strategy.prepare_model(model, config.full)
         elif stage == "inference":
             raise NotImplementedError("Inference stage is not implemented yet.")
-
-    def _prepare_model_for_fine_tuning(self,
-                                       model: nn.Module,
-                                       config: DictConfig,
-                                       fine_tuning_type: FineTuningType,
-                                       peft_type: Optional[PEFTType],
-                                       ):
-        if fine_tuning_type == FineTuningType.PEFT:
-            if peft_type is None:
-                raise ValueError("PEFT type must be specified for PEFT fine-tuning")
-            strategy = self.strategies[fine_tuning_type][peft_type]
-            return strategy.prepare_model(model, config.peft)
-        else:
-            strategy = self.strategies[fine_tuning_type]
-            return strategy.prepare_model(model, config.full)
-        
 
 
 class Model(nn.Module):
@@ -144,13 +112,3 @@ class Model(nn.Module):
                 input_dict:dict[str, torch.Tensor]) -> torch.Tensor:
         outputs = self.encoder(**input_dict)
         return outputs.last_hidden_state
-
-# class ModelFactory():
-#     """Factory class for creating models"""
-#     MODELS = {}
-#     @classmethod
-#     def create_model(self, config: DictConfig) -> nn.Module:
-#         model_name = config.model_name
-#         if model_name not in self.MODELS:
-#             self.MODELS[model_name] = AutoModel.from_pretrained(model_name)
-#         return self.MODELS[model_name]
