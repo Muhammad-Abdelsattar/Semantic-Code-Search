@@ -65,6 +65,8 @@ def test_full_fine_tuning(model_manager, model, config):
             assert param.requires_grad == True
         elif "embeddings" in name:
             assert param.requires_grad == False
+        elif "pooler" in name:
+            assert param.requires_grad == True
         elif param.requires_grad:
             assert False
 
@@ -80,6 +82,8 @@ def test_full_fine_tuning_trainable_embeddings(model_manager, model, config):
     for name, param in prepared_model.named_parameters():
         if "embeddings" in name:
             assert param.requires_grad == True
+        elif "pooler" in name:
+            assert param.requires_grad == True
         
 def test_full_fine_tuning_all_layers(model_manager, model, config):
     config.model.fine_tuning.full.layers = -1
@@ -92,6 +96,8 @@ def test_full_fine_tuning_all_layers(model_manager, model, config):
     # Check if all layers are trainable
     for name, param in prepared_model.named_parameters():
         if "embeddings" not in name:
+            assert param.requires_grad == True
+        elif "pooler" in name:
             assert param.requires_grad == True
         else:
             assert param.requires_grad == False
@@ -106,7 +112,10 @@ def test_full_fine_tuning_no_layers(model_manager, model, config):
     
     # Check if no layers are trainable
     for name, param in prepared_model.named_parameters():
-        assert param.requires_grad == False
+        if "pooler" in name:
+            assert param.requires_grad == True
+        else:
+            assert param.requires_grad == False
 
 def test_lora_fine_tuning(model_manager, model, config):
     prepared_model = model_manager.prepare_model(model=model,
