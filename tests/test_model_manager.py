@@ -54,8 +54,9 @@ def test_full_fine_tuning(model_manager, model, config):
     assert isinstance(prepared_model, torch.nn.Module)
     
     # Check if the last 2 layers are trainable
+    trainable_layers = ["encoder.layer.10", "encoder.layer.11"]
     for name, param in prepared_model.named_parameters():
-        if "encoder.layer.10" in name or "encoder.layer.11" in name:
+        if any(layer in name for layer in trainable_layers):
             assert param.requires_grad == True
         elif "embeddings" in name:
             assert param.requires_grad == False
