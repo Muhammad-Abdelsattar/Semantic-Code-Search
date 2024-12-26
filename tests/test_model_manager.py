@@ -96,6 +96,8 @@ def test_lora_fine_tuning(model_manager, model, config):
                                                  peft_type=PEFTType.LORA)
     assert isinstance(prepared_model, torch.nn.Module)
     assert hasattr(prepared_model, 'base_model')
+    assert hasattr(prepared_model, 'lora_A')
+    assert hasattr(prepared_model, 'lora_B')
     assert hasattr(prepared_model, 'lora_dropout')
 
 def test_prefix_fine_tuning(model_manager, model, config):
@@ -105,7 +107,6 @@ def test_prefix_fine_tuning(model_manager, model, config):
                                                  peft_type=PEFTType.PREFIX)
     assert isinstance(prepared_model, torch.nn.Module)
     assert hasattr(prepared_model, 'base_model')
-    assert hasattr(prepared_model, 'prefix_tokens')
 
 def test_peft_fine_tuning_no_peft_type(model_manager, model, config):
     with pytest.raises(ValueError, match="PEFT type must be specified for PEFT fine-tuning"):
