@@ -1,6 +1,6 @@
 import torch
 from omegaconf import DictConfig, OmegaConf
-from code_serach.modeling.model_manager import (
+from model_manager import (
     BaseEncoder,
     ModelFineTuningManager,
     FineTuningType,

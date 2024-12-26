@@ -6,16 +6,14 @@ model:
       train_embeddings: false
     peft:
       lora:
-        config:
-          task_type: "SEQ_CLS"
-          inference_mode: False
-          target_modules: ["q_proj", "v_proj", "k_proj"]
-          r: 8
-          lora_alpha: 32
-          lora_dropout: 0.05
+        task_type: "SEQ_CLS"
+        inference_mode: False
+        target_modules: ["query", "value", "key"]
+        r: 8
+        lora_alpha: 32
+        lora_dropout: 0.05
       prefix:
-        config:
-          task_type: "SEQ_CLS"
-          num_virtual_tokens: 20
-          inference_mode: False
-          prefix_projection: True
+        task_type: "SEQ_CLS"
+        num_virtual_tokens: 20
+        inference_mode: False
+        prefix_projection: True
