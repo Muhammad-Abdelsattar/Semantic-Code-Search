@@ -17,7 +17,7 @@ model:
         num_virtual_tokens: 20
         inference_mode: False
         prefix_projection: True
-optimizer_config:
+optimizer:
   optimizer:
     name: "AdamW"
     optimizer_args:
@@ -26,10 +26,8 @@ optimizer_config:
     parameter_groups:
       - layer_names: ["embeddings"]
         optimizer_args:
-          lr: 1e-3
       - layer_names: ["encoder.layer.0", "encoder.layer.1"]
         optimizer_args:
-          lr: 1e-5
   scheduler:
     name: "linear"
     scheduler_args:

@@ -25,13 +25,13 @@ class OptimizerFactory:
                          config: DictConfig,
                          learning_rate: float) -> torch.optim.Optimizer:
         """Creates an optimizer based on the given configuration."""
-        optimizer_config = config.optimizer_config.optimizer
+        optimizer_config = config.optimizer.optimizer
         optimizer_name = optimizer_config.name.lower()
         optimizer_class = cls.OPTIMIZER_MAPPING.get(optimizer_name)
         if not optimizer_class:
             raise ValueError(f"Unsupported optimizer: {optimizer_name}")
         
-        params = cls._get_parameter_groups(model, optimizer_config.parameter_groups)
+        params = cls._get_parameter_groups(model, optimizer_config.parameter_groups, learning_rate)
         
         optimizer = optimizer_class(params=params,
                                     lr=learning_rate,
@@ -43,7 +43,7 @@ class OptimizerFactory:
                          optimizer: torch.optim.Optimizer,
                          config: DictConfig) -> torch.optim.lr_scheduler._LRScheduler:
         """Creates a learning rate scheduler based on the given configuration."""
-        scheduler_config = config.optimizer_config.scheduler
+        scheduler_config = config.optimizer.scheduler
         scheduler_name = scheduler_config.name.lower()
         scheduler_class = cls.SCHEDULER_MAPPING.get(scheduler_name)
         if not scheduler_class:
@@ -56,11 +56,12 @@ class OptimizerFactory:
     @classmethod
     def _get_parameter_groups(cls,
                               model: nn.Module,
-                              parameter_groups_config: Optional[List[Dict]]
+                              parameter_groups_config: Optional[List[Dict]],
+                              learning_rate: float
                               ) -> List[Dict]:
         """Creates parameter groups for the optimizer."""
         if not parameter_groups_config:
-            return model.parameters()
+            return [{"params": model.parameters(), "lr": learning_rate}]
         
         params = []
         for group_config in parameter_groups_config:
@@ -68,5 +69,5 @@ class OptimizerFactory:
             for name, param in model.named_parameters():
                 if any(layer_name in name for layer_name in group_config.layer_names):
                     group_params.append(param)
-            params.append({"params": group_params, **group_config.optimizer_args})
+            params.append({"params": group_params, "lr": learning_rate, **group_config.optimizer_args})
         return params
