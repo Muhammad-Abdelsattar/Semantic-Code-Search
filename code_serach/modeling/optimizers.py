@@ -31,9 +31,7 @@ class OptimizerFactory:
         if not optimizer_class:
             raise ValueError(f"Unsupported optimizer: {optimizer_name}")
         
-        params = cls._get_parameter_groups(model, optimizer_config.parameter_groups, learning_rate)
-        
-        optimizer = optimizer_class(params=params,
+        optimizer = optimizer_class(params=model.parameters(),
                                     lr=learning_rate,
                                     **optimizer_config.optimizer_args)
         return optimizer
@@ -52,22 +50,3 @@ class OptimizerFactory:
         scheduler = scheduler_class(optimizer=optimizer,
                                     **scheduler_config.scheduler_args)
         return scheduler
-    
-    @classmethod
-    def _get_parameter_groups(cls,
-                              model: nn.Module,
-                              parameter_groups_config: Optional[List[Dict]],
-                              learning_rate: float
-                              ) -> List[Dict]:
-        """Creates parameter groups for the optimizer."""
-        if not parameter_groups_config:
-            return [{"params": model.parameters(), "lr": learning_rate}]
-        
-        params = []
-        for group_config in parameter_groups_config:
-            group_params = []
-            for name, param in model.named_parameters():
-                if any(layer_name in name for layer_name in group_config.layer_names):
-                    group_params.append(param)
-            params.append({"params": group_params, "lr": learning_rate, **group_config.optimizer_args})
-        return params

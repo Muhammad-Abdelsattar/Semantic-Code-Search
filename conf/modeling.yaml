@@ -23,11 +23,6 @@ optimizer:
     optimizer_args:
       weight_decay: 0.01
       betas: [0.9, 0.999]
-    parameter_groups:
-      - layer_names: ["embeddings"]
-        optimizer_args:
-      - layer_names: ["encoder.layer.0", "encoder.layer.1"]
-        optimizer_args:
   scheduler:
     name: "linear"
     scheduler_args:
