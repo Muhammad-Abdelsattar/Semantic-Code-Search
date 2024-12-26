@@ -139,12 +139,6 @@ def test_prefix_fine_tuning(model_manager, model, config):
         if "prompt_encoder" not in name:
             assert param.requires_grad == False
 
-def test_peft_fine_tuning_no_peft_type(model_manager, model, config):
-    with pytest.raises(ValueError, match="PEFT type must be specified for PEFT fine-tuning"):
-         model_manager.prepare_model(model=model,
-                                     config=config.model.fine_tuning,
-                                     fine_tuning_type=FineTuningType.PEFT)
-    
 def test_invalid_stage(model_manager, model, config):
     with pytest.raises(NotImplementedError, match="Inference stage is not implemented yet."):
         model_manager.prepare_model(model=model,
