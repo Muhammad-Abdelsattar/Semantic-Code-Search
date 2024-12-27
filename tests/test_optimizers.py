@@ -2,7 +2,10 @@ import pytest
 import torch
 import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf
-from ..modeling.optimizers import OptimizerFactory
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from code_serach.modeling.optimizers import OptimizerFactory
 from torch.optim import Adam, AdamW, SGD
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, ExponentialLR, ConstantLR, SequentialLR
 
