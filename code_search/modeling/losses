@@ -2,17 +2,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from typing import Optional
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
 class InfoNCELoss(nn.Module):
     def __init__(self,
-                 temperature=0.07):
-        super(InfoNCELoss, self).__init__()
+                 temperature: float = 0.07):
+        super().__init__()
         self.temperature = temperature
 
     def forward(self,
-                query_embeddings,
-                key_embeddings,
-                memory_bank=None,
-                normalize=True):
+                query_embeddings: torch.Tensor,
+                key_embeddings: torch.Tensor,
+                memory_bank: Optional['MemoryBank'] = None,
+                normalize: bool = True) -> torch.Tensor:
         """
         Computes the InfoNCE loss with optional memory bank.
         """
@@ -31,10 +37,7 @@ class InfoNCELoss(nn.Module):
 
         # Create target labels
         batch_size = key_embeddings.size(0)
-        if memory_bank is not None:
-            labels = torch.arange(batch_size, dtype=torch.long, device=logits.device)
-        else:
-            labels = torch.arange(batch_size, dtype=torch.long, device=logits.device)
+        labels = torch.arange(batch_size, like=logits)
 
         # Compute cross-entropy loss
         loss = F.cross_entropy(logits, labels)
@@ -42,7 +45,7 @@ class InfoNCELoss(nn.Module):
         return loss
 
 class MemoryBank:
-    def __init__(self, size, embedding_dim, device):
+    def __init__(self, size: int, embedding_dim: int, device: torch.device):
         self.size = size
         self.embedding_dim = embedding_dim
         self.device = device
@@ -50,17 +53,9 @@ class MemoryBank:
         self.ptr = 0
         self.full = False
 
-    def update(self, embeddings):
+    def update(self, embeddings: torch.Tensor):
         batch_size = embeddings.size(0)
-        if self.ptr + batch_size > self.size:
-            rest = self.size - self.ptr
-            self.bank[self.ptr:self.size] = embeddings[:rest]
-            self.bank[0:batch_size - rest] = embeddings[rest:batch_size]
-            self.ptr = batch_size - rest
+        self.bank[self.ptr:self.ptr + batch_size] = embeddings
+        self.ptr = (self.ptr + batch_size) % self.size
+        if self.ptr == 0:
             self.full = True
-        else:
-            self.bank[self.ptr:self.ptr + batch_size] = embeddings
-            self.ptr += batch_size
-            if self.ptr == self.size:
-                self.ptr = 0
-                self.full = True
