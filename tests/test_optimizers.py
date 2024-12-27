@@ -76,8 +76,9 @@ def test_create_scheduler(model, base_config):
 
     # Test creating linear scheduler without warmup
     base_config.optimizer.scheduler.name = "linear"
-    base_config.optimizer.warmup = None
-    scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
+    temp_config = base_config.copy()
+    temp_config.optimizer.warmup = None
+    scheduler = OptimizerFactory.create_scheduler(optimizer, temp_config)
     assert isinstance(scheduler, LinearLR)
 
     # Test creating exponential warmup scheduler
