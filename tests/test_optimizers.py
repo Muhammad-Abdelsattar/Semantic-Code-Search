@@ -1,9 +1,10 @@
 import pytest
+import os
 import sys
 import torch
 import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf
-sys.path.append('.')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from code_search.modeling.optimizers import OptimizerFactory
 from torch.optim import Adam, AdamW, SGD
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, ExponentialLR, ConstantLR, SequentialLR
