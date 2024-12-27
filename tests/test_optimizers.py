@@ -131,6 +131,7 @@ def test_create_scheduler(model, base_config):
         OptimizerFactory.create_scheduler(optimizer, base_config)
 
     # Test neither warmup_steps nor warmup_epochs
+    base_config.optimizer.warmup = None
     base_config.optimizer.warmup = {"name": "linear"}
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     with pytest.raises(ValueError, match="Specify either warmup_steps or warmup_epochs."):
