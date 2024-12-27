@@ -77,6 +77,7 @@ def test_create_scheduler(model, base_config):
     base_config.optimizer.warmup = None
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, CosineAnnealingLR)
+    del base_config.optimizer.scheduler.scheduler_args["T_max"]
 
     # Test creating linear scheduler without warmup
     base_config.optimizer.scheduler.name = "linear"
