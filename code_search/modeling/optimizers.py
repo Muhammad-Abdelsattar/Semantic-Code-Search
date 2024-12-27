@@ -18,7 +18,6 @@ class OptimizerFactory:
     SCHEDULER_MAPPING: Dict[str, Callable] = {
         "linear": LinearLR,
         "cosine": CosineAnnealingLR,
-        "constant": ConstantLR,
     }
 
     @classmethod
@@ -62,8 +61,9 @@ class OptimizerFactory:
         
         if "warmup" in config.optimizer and config.optimizer.warmup:
             warmup_config = config.optimizer.warmup
-            warmup_scheduler = ConstantLR(optimizer=optimizer,
-                                          factor=warmup_config.start_factor,
+            warmup_scheduler = LinearLR(optimizer=optimizer,
+                                          start_factor=warmup_config.start_factor,
+                                          end_factor=1.0,
                                           total_iters=warmup_config.warmup_steps)
             scheduler = SequentialLR(optimizer=optimizer,
                                      schedulers=[warmup_scheduler, main_scheduler],
