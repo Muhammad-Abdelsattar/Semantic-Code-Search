@@ -19,12 +19,6 @@ class OptimizerFactory:
         "cosine": CosineAnnealingLR,
     }
 
-    WARMUP_MAPPING: Dict[str, Callable] = {
-        "linear": LinearLR,
-        "exponential": ExponentialLR,
-        "constant": ConstantLR,
-    }
-
     @classmethod
     def create_optimizer(cls,
                          model: nn.Module,
@@ -62,11 +56,6 @@ class OptimizerFactory:
 
         warmup_config = config.optimizer.get("warmup")
         if warmup_config:
-            warmup_name = warmup_config.name.lower()
-            warmup_class = cls.WARMUP_MAPPING.get(warmup_name)
-            if not warmup_class:
-                raise ValueError(f"Unsupported warmup scheduler: {warmup_name}")
-            
             warmup_steps = warmup_config.get("warmup_steps")
             warmup_epochs = warmup_config.get("warmup_epochs")
             if warmup_steps is not None and warmup_epochs is not None:
@@ -74,16 +63,25 @@ class OptimizerFactory:
             if warmup_steps is None and warmup_epochs is None:
                 raise ValueError("Specify either warmup_steps or warmup_epochs.")
             
+            start_factor = warmup_config.get("start_factor", 1/3)
+            end_factor = warmup_config.get("end_factor", 1.0)
+            
             if warmup_steps:
-                warmup_scheduler = warmup_class(optimizer=optimizer,
-                                                start_factor=warmup_config.get("start_factor", 1/3),
-                                                end_factor=warmup_config.get("end_factor", 1.0),
-                                                total_iters=warmup_steps)
-            else: #warmup_epochs
-                 warmup_scheduler = warmup_class(optimizer=optimizer,
-                                                start_factor=warmup_config.get("start_factor", 1/3),
-                                                end_factor=warmup_config.get("end_factor", 1.0),
-                                                total_epochs=warmup_epochs)
+                total_iters = warmup_steps
+            else:
+                total_iters = warmup_epochs
+            
+            warmup_name = warmup_config.name.lower()
+            if warmup_name == "linear":
+                lambda_fn = lambda current_step: (start_factor + (end_factor - start_factor) * current_step / total_iters) if current_step <= total_iters else end_factor
+            elif warmup_name == "exponential":
+                lambda_fn = lambda current_step: start_factor * (end_factor / start_factor) ** (current_step / total_iters) if current_step <= total_iters else end_factor
+            elif warmup_name == "constant":
+                lambda_fn = lambda current_step: start_factor if current_step <= total_iters else end_factor
+            else:
+                raise ValueError(f"Unsupported warmup scheduler: {warmup_name}")
+            
+            warmup_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_fn)
             
             scheduler_args = {k: v for k, v in scheduler_config.scheduler_args.items() if k not in ["start_factor", "end_factor", "total_iters", "total_epochs"]}
             scheduler = scheduler_class(optimizer=optimizer,

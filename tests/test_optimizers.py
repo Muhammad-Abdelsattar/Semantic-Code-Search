@@ -68,7 +68,7 @@ def test_create_scheduler(model, base_config):
     # Test creating linear scheduler with warmup
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], LinearLR)
+    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
     assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test creating cosine scheduler
@@ -92,7 +92,7 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], ExponentialLR)
+    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
     assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test creating constant warmup scheduler
@@ -101,7 +101,7 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], ConstantLR)
+    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
     assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test creating warmup with epochs
@@ -110,7 +110,7 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], LinearLR)
+    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
     assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test invalid scheduler name
