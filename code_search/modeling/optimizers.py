@@ -85,14 +85,16 @@ class OptimizerFactory:
                                                 end_factor=warmup_config.get("end_factor", 1.0),
                                                 total_epochs=warmup_epochs)
             
+            scheduler_args = {k: v for k, v in scheduler_config.scheduler_args.items() if k not in ["start_factor", "end_factor", "total_iters", "total_epochs"]}
             scheduler = scheduler_class(optimizer=optimizer,
-                                        **scheduler_config.scheduler_args)
+                                        **scheduler_args)
             
             scheduler = SequentialLR(optimizer=optimizer,
                                      schedulers=[warmup_scheduler, scheduler],
                                      milestones=[warmup_steps if warmup_steps else warmup_epochs])
             return scheduler
         else:
+            scheduler_args = {k: v for k, v in scheduler_config.scheduler_args.items() if k not in ["start_factor", "end_factor", "total_iters", "total_epochs"]}
             scheduler = scheduler_class(optimizer=optimizer,
-                                        **scheduler_config.scheduler_args)
+                                        **scheduler_args)
             return scheduler
