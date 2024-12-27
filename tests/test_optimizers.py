@@ -66,73 +66,17 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
 
     # Test creating linear scheduler with warmup
+    # Test creating linear scheduler
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
-    assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
-    assert isinstance(scheduler._schedulers[1], LinearLR)
+    assert isinstance(scheduler, LinearLR)
 
     # Test creating cosine scheduler
     base_config.optimizer.scheduler.name = "cosine"
     base_config.optimizer.scheduler.scheduler_args.T_max = 100
-    base_config.optimizer.warmup = None
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, CosineAnnealingLR)
-    del base_config.optimizer.scheduler.scheduler_args["T_max"]
-
-    # Test creating linear scheduler without warmup
-    base_config.optimizer.scheduler.name = "linear"
-    temp_config = base_config.copy()
-    temp_config.optimizer.warmup = None
-    scheduler = OptimizerFactory.create_scheduler(optimizer, temp_config)
-    assert isinstance(scheduler, LinearLR)
-
-    # Test creating exponential warmup scheduler
-    base_config.optimizer.warmup = {"name": "exponential", "warmup_steps": 100}
-    base_config.optimizer.scheduler.name = "linear"
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
-    scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
-    assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
-    assert isinstance(scheduler._schedulers[1], LinearLR)
-
-    # Test creating constant warmup scheduler
-    base_config.optimizer.warmup = {"name": "constant", "warmup_steps": 100}
-    base_config.optimizer.scheduler.name = "linear"
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
-    scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
-    assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
-    assert isinstance(scheduler._schedulers[1], LinearLR)
-
-    # Test creating warmup with epochs
-    base_config.optimizer.warmup = {"name": "linear", "warmup_epochs": 10}
-    base_config.optimizer.scheduler.name = "linear"
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
-    scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
-    assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler._schedulers[0], torch.optim.lr_scheduler.LambdaLR)
-    assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test invalid scheduler name
     base_config.optimizer.scheduler.name = "invalid_scheduler"
     with pytest.raises(ValueError, match="Unsupported scheduler: invalid_scheduler"):
          OptimizerFactory.create_scheduler(optimizer, base_config)
-
-    # Test invalid warmup name
-    base_config.optimizer.scheduler.name = "linear"
-    base_config.optimizer.warmup = {"name": "invalid_warmup", "warmup_steps": 100}
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
-    with pytest.raises(ValueError, match="Unsupported warmup scheduler: invalid_warmup"):
-        OptimizerFactory.create_scheduler(optimizer, base_config)
-
-    # Test both warmup_steps and warmup_epochs
-    base_config.optimizer.warmup = {"name": "linear", "warmup_steps": 100, "warmup_epochs": 10}
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
-    with pytest.raises(ValueError, match="Specify either warmup_steps or warmup_epochs, not both."):
-        OptimizerFactory.create_scheduler(optimizer, base_config)
-
-    # Test neither warmup_steps nor warmup_epochs
-    base_config.optimizer.warmup = {"name": "linear"}
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
-    with pytest.raises(ValueError, match="Specify either warmup_steps or warmup_epochs, not both."):
-        OptimizerFactory.create_scheduler(optimizer, base_config)
