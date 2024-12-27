@@ -1,7 +1,9 @@
 import pytest
+import sys
 import torch
 import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf
+sys.path.append('.')
 from code_search.modeling.optimizers import OptimizerFactory
 from torch.optim import Adam, AdamW, SGD
 from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, ExponentialLR, ConstantLR, SequentialLR
