@@ -73,6 +73,7 @@ def test_create_scheduler(model, base_config):
 
     # Test creating cosine scheduler
     base_config.optimizer.scheduler.name = "cosine"
+    base_config.optimizer.scheduler.scheduler_args.T_max = 100
     base_config.optimizer.warmup = None
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, CosineAnnealingLR)
