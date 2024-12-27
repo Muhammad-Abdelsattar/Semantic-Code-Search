@@ -44,24 +44,28 @@ def base_config():
 
 def test_create_optimizer(model, base_config):
     # Test creating AdamW optimizer
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
+    config = OmegaConf.create(base_config)
+    optimizer = OptimizerFactory.create_optimizer(model, config, learning_rate=1e-3)
     assert isinstance(optimizer, AdamW)
     
     # Test creating Adam optimizer
-    base_config.optimizer.optimizer.name = "Adam"
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
+    config = OmegaConf.create(base_config)
+    config.optimizer.optimizer.name = "Adam"
+    optimizer = OptimizerFactory.create_optimizer(model, config, learning_rate=1e-3)
     assert isinstance(optimizer, Adam)
 
     # Test creating SGD optimizer
-    base_config.optimizer.optimizer.name = "SGD"
-    base_config.optimizer.optimizer.optimizer_args = {}
-    optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
+    config = OmegaConf.create(base_config)
+    config.optimizer.optimizer.name = "SGD"
+    config.optimizer.optimizer.optimizer_args = {}
+    optimizer = OptimizerFactory.create_optimizer(model, config, learning_rate=1e-3)
     assert isinstance(optimizer, SGD)
 
     # Test invalid optimizer name
-    base_config.optimizer.optimizer.name = "invalid_optimizer"
+    config = OmegaConf.create(base_config)
+    config.optimizer.optimizer.name = "invalid_optimizer"
     with pytest.raises(ValueError, match="Unsupported optimizer: invalid_optimizer"):
-        OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
+        OptimizerFactory.create_optimizer(model, config, learning_rate=1e-3)
 
 def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
