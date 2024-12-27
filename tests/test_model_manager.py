@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import pytest
 import torch
 from omegaconf import DictConfig, OmegaConf
-from code_serach.modeling.model_manager import (
+from code_search.modeling.model_manager import (
     ModelManager,
     FineTuningType,
     PEFTType,
