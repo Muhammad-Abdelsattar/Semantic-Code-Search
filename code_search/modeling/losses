@@ -37,7 +37,7 @@ class InfoNCELoss(nn.Module):
 
         # Create target labels
         batch_size = key_embeddings.size(0)
-        labels = torch.arange(batch_size, like=logits)
+        labels = torch.arange(batch_size, device=query_embeddings.device)
 
         # Compute cross-entropy loss
         loss = F.cross_entropy(logits, labels)
