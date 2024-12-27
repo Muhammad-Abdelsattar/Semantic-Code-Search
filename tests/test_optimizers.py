@@ -65,15 +65,27 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
 
     # Test creating linear scheduler with warmup
-    # Test creating linear scheduler
+    scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
+    assert isinstance(scheduler, SequentialLR)
+    assert isinstance(scheduler.scheduler1, LinearLR)
+    assert isinstance(scheduler.scheduler2, LinearLR)
+
+    # Test creating linear scheduler without warmup
+    base_config.optimizer.warmup = None
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, LinearLR)
 
     # Test creating cosine scheduler
+    base_config.optimizer.warmup = {
+                "warmup_steps": 100,
+                "start_factor": 1/3,
+            }
     base_config.optimizer.scheduler.name = "cosine"
     base_config.optimizer.scheduler.scheduler_args.T_max = 100
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
-    assert isinstance(scheduler, CosineAnnealingLR)
+    assert isinstance(scheduler, SequentialLR)
+    assert isinstance(scheduler.scheduler1, LinearLR)
+    assert isinstance(scheduler.scheduler2, CosineAnnealingLR)
 
     # Test invalid scheduler name
     base_config.optimizer.scheduler.name = "invalid_scheduler"
