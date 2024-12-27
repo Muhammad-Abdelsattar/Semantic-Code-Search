@@ -18,6 +18,7 @@ class OptimizerFactory:
     SCHEDULER_MAPPING: Dict[str, Callable] = {
         "linear": LinearLR,
         "cosine": CosineAnnealingLR,
+        "constant": ConstantLR,
     }
 
     @classmethod
@@ -54,8 +55,19 @@ class OptimizerFactory:
         scheduler_class = cls.SCHEDULER_MAPPING.get(scheduler_name)
         if not scheduler_class:
             raise ValueError(f"Unsupported scheduler: {scheduler_name}")
-        
+
         scheduler_args = {k: v for k, v in scheduler_config.scheduler_args.items() if k not in ["start_factor", "end_factor", "total_iters", "total_epochs"]}
-        scheduler = scheduler_class(optimizer=optimizer,
+        main_scheduler = scheduler_class(optimizer=optimizer,
                                     **scheduler_args)
-        return scheduler
+        
+        if "warmup" in config.optimizer and config.optimizer.warmup:
+            warmup_config = config.optimizer.warmup
+            warmup_scheduler = ConstantLR(optimizer=optimizer,
+                                          factor=warmup_config.start_factor,
+                                          total_iters=warmup_config.warmup_steps)
+            scheduler = SequentialLR(optimizer=optimizer,
+                                     schedulers=[warmup_scheduler, main_scheduler],
+                                     milestones=[warmup_config.warmup_steps])
+            return scheduler
+        else:
+            return main_scheduler
