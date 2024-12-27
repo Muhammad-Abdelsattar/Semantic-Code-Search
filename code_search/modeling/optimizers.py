@@ -5,6 +5,7 @@ from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, ExponentialLR,
 from omegaconf import DictConfig
 from typing import List, Dict, Tuple, Optional, Callable
 
+
 class OptimizerFactory:
     """Factory class for creating optimizers and learning rate schedulers."""
 
