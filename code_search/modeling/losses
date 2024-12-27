@@ -1,0 +1,66 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class InfoNCELoss(nn.Module):
+    def __init__(self,
+                 temperature=0.07):
+        super(InfoNCELoss, self).__init__()
+        self.temperature = temperature
+
+    def forward(self,
+                query_embeddings,
+                key_embeddings,
+                memory_bank=None,
+                normalize=True):
+        """
+        Computes the InfoNCE loss with optional memory bank.
+        """
+        if normalize:
+            query_embeddings = F.normalize(query_embeddings, p=2, dim=1)
+            key_embeddings = F.normalize(key_embeddings, p=2, dim=1)
+
+        if memory_bank is not None:
+            # Combine current key embeddings with memory bank
+            all_key_embeddings = torch.cat([key_embeddings, memory_bank.bank.clone().detach()], dim=0)
+        else:
+            all_key_embeddings = key_embeddings
+
+        # Compute similarity scores
+        logits = torch.matmul(query_embeddings, all_key_embeddings.T) / self.temperature
+
+        # Create target labels
+        batch_size = key_embeddings.size(0)
+        if memory_bank is not None:
+            labels = torch.arange(batch_size, dtype=torch.long, device=logits.device)
+        else:
+            labels = torch.arange(batch_size, dtype=torch.long, device=logits.device)
+
+        # Compute cross-entropy loss
+        loss = F.cross_entropy(logits, labels)
+
+        return loss
+
+class MemoryBank:
+    def __init__(self, size, embedding_dim, device):
+        self.size = size
+        self.embedding_dim = embedding_dim
+        self.device = device
+        self.bank = torch.zeros(size, embedding_dim, device=device)
+        self.ptr = 0
+        self.full = False
+
+    def update(self, embeddings):
+        batch_size = embeddings.size(0)
+        if self.ptr + batch_size > self.size:
+            rest = self.size - self.ptr
+            self.bank[self.ptr:self.size] = embeddings[:rest]
+            self.bank[0:batch_size - rest] = embeddings[rest:batch_size]
+            self.ptr = batch_size - rest
+            self.full = True
+        else:
+            self.bank[self.ptr:self.ptr + batch_size] = embeddings
+            self.ptr += batch_size
+            if self.ptr == self.size:
+                self.ptr = 0
+                self.full = True
