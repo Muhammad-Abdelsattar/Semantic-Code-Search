@@ -37,9 +37,16 @@ class OptimizerFactory:
         if not optimizer_class:
             raise ValueError(f"Unsupported optimizer: {optimizer_name}")
         
+        # Filter out invalid arguments for the optimizer
+        valid_args = {}
+        if optimizer_name in ["adam", "adamw"]:
+            valid_args = optimizer_config.optimizer_args
+        else:
+            valid_args = {k: v for k, v in optimizer_config.optimizer_args.items() if k not in ["betas"]}
+        
         optimizer = optimizer_class(params=model.parameters(),
                                     lr=learning_rate,
-                                    **optimizer_config.optimizer_args)
+                                    **valid_args)
         return optimizer
 
     @classmethod

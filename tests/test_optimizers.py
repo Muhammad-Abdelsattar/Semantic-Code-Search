@@ -68,8 +68,8 @@ def test_create_scheduler(model, base_config):
     # Test creating linear scheduler with warmup
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler.schedulers[0], LinearLR)
-    assert isinstance(scheduler.schedulers[1], LinearLR)
+    assert isinstance(scheduler._schedulers[0], LinearLR)
+    assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test creating cosine scheduler
     base_config.optimizer.scheduler.name = "cosine"
@@ -90,8 +90,8 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler.schedulers[0], ExponentialLR)
-    assert isinstance(scheduler.schedulers[1], LinearLR)
+    assert isinstance(scheduler._schedulers[0], ExponentialLR)
+    assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test creating constant warmup scheduler
     base_config.optimizer.warmup = {"name": "constant", "warmup_steps": 100}
@@ -99,8 +99,8 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler.schedulers[0], ConstantLR)
-    assert isinstance(scheduler.schedulers[1], LinearLR)
+    assert isinstance(scheduler._schedulers[0], ConstantLR)
+    assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test creating warmup with epochs
     base_config.optimizer.warmup = {"name": "linear", "warmup_epochs": 10}
@@ -108,8 +108,8 @@ def test_create_scheduler(model, base_config):
     optimizer = OptimizerFactory.create_optimizer(model, base_config, learning_rate=1e-3)
     scheduler = OptimizerFactory.create_scheduler(optimizer, base_config)
     assert isinstance(scheduler, SequentialLR)
-    assert isinstance(scheduler.schedulers[0], LinearLR)
-    assert isinstance(scheduler.schedulers[1], LinearLR)
+    assert isinstance(scheduler._schedulers[0], LinearLR)
+    assert isinstance(scheduler._schedulers[1], LinearLR)
 
     # Test invalid scheduler name
     base_config.optimizer.scheduler.name = "invalid_scheduler"
