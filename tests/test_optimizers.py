@@ -34,7 +34,6 @@ def base_config():
                 }
             },
             "warmup": {
-                "name": "linear",
                 "warmup_steps": 100,
                 "start_factor": 1/3,
                 "end_factor": 1.0
