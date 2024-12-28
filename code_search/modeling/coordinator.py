@@ -1,7 +1,7 @@
 from typing import Optional
 import torch
 import torch.nn as nn
-from pytorch_lightning import LightningModule
+from lightning import LightningModule
 from omegaconf import DictConfig
 
 from code_search.modeling.model_manager import ModelManager, Model, FineTuningType, PEFTType
