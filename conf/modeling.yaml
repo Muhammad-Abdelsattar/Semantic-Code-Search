@@ -17,6 +17,10 @@ model:
         num_virtual_tokens: 20
         inference_mode: False
         prefix_projection: True
+loss:
+  name: "InfoNCE"
+  loss_args:
+    temperature: 0.07
 optimizer:
   optimizer:
     name: "AdamW"
