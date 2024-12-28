@@ -39,7 +39,6 @@ class InfoNCELoss(nn.Module):
     def forward(self,
                 query_embeddings: torch.Tensor,
                 key_embeddings: torch.Tensor,
-                memory_bank: Optional[MemoryBank] = None,
                 normalize: bool = True) -> torch.Tensor:
         """
         Computes the InfoNCE loss with optional memory bank.
@@ -48,14 +47,14 @@ class InfoNCELoss(nn.Module):
             query_embeddings = F.normalize(query_embeddings, p=2, dim=1)
             key_embeddings = F.normalize(key_embeddings, p=2, dim=1)
 
-        if memory_bank is not None:
+        if self.memory_bank is not None:
             # Combine current key embeddings with memory bank
-            all_key_embeddings = torch.cat([key_embeddings, memory_bank.bank.clone().detach()], dim=0)
+            all_key_embeddings = torch.cat([key_embeddings, self.memory_bank.bank.clone().detach()], dim=0)
         else:
             all_key_embeddings = key_embeddings
         
-        if memory_bank is not None:
-            memory_bank.update(key_embeddings)
+        if self.memory_bank is not None:
+            self.memory_bank.update(key_embeddings)
 
         # Compute similarity scores
         logits = torch.matmul(query_embeddings, all_key_embeddings.T) / self.temperature
