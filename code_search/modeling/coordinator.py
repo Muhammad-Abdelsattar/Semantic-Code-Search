@@ -15,10 +15,8 @@ class ModelingCoordinator(LightningModule):
         self.config = config
         self.save_hyperparameters(config)
 
-        self.model_manager = ModelManager()
         self.model = self._build_model()
         self.loss_fn = self._build_loss_fn()
-        self.memory_bank = self._build_memory_bank()
 
     def _build_loss_fn(self) -> nn.Module:
         return LossFactory.create_loss(self.config.loss)
@@ -26,19 +24,15 @@ class ModelingCoordinator(LightningModule):
     def _build_model(self) -> nn.Module:
         model = Model(self.config.model.model_id)
         fine_tuning_type = FineTuningType(self.config.model.fine_tuning_type.upper())
+        model_manager = ModelManager()
         peft_type = self.config.model.peft_type
         if peft_type:
             peft_type = PEFTType(peft_type.upper())
-        model = self.model_manager.prepare_model(model=model,
+        model = model_manager.prepare_model(model=model,
                                                  config=self.config.model,
                                                  fine_tuning_type=fine_tuning_type,
                                                  peft_type=peft_type)
         return model
-
-    def _build_memory_bank(self) -> Optional[MemoryBank]:
-        if self.config.memory_bank.use_memory_bank:
-            return MemoryBank(**self.config.memory_bank)
-        return None
 
     def configure_optimizers(self):
         optimizer = OptimizerFactory.create_optimizer(model=self.model,
