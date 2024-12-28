@@ -5,6 +5,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class MemoryBank:
+    def __init__(self, size: int, embedding_dim: int, device: torch.device):
+        self.size = size
+        self.embedding_dim = embedding_dim
+        self.device = device
+        self.bank = torch.zeros(size, embedding_dim, device=device)
+        self.ptr = 0
+        self.full = False
+
+    def update(self, embeddings: torch.Tensor):
+        batch_size = embeddings.size(0)
+        if(self.size % batch_size != 0):
+            raise ValueError("Batch size must be a multiple of memory bank size")
+        self.bank[self.ptr:self.ptr + batch_size] = embeddings
+        self.ptr = (self.ptr + batch_size) % self.size
+        if self.ptr == 0:
+            self.full = True
+
 class InfoNCELoss(nn.Module):
     def __init__(self,
                  temperature: float = 0.07):
@@ -14,7 +32,7 @@ class InfoNCELoss(nn.Module):
     def forward(self,
                 query_embeddings: torch.Tensor,
                 key_embeddings: torch.Tensor,
-                memory_bank: Optional['MemoryBank'] = None,
+                memory_bank: Optional[MemoryBank] = None,
                 normalize: bool = True) -> torch.Tensor:
         """
         Computes the InfoNCE loss with optional memory bank.
@@ -56,21 +74,3 @@ class LossFactory:
         if not loss_class:
             raise ValueError(f"Unsupported loss function: {loss_name}")
         return loss_class(**loss_args)
-
-class MemoryBank:
-    def __init__(self, size: int, embedding_dim: int, device: torch.device):
-        self.size = size
-        self.embedding_dim = embedding_dim
-        self.device = device
-        self.bank = torch.zeros(size, embedding_dim, device=device)
-        self.ptr = 0
-        self.full = False
-
-    def update(self, embeddings: torch.Tensor):
-        batch_size = embeddings.size(0)
-        if(self.size % batch_size != 0):
-            raise ValueError("Batch size must be a multiple of memory bank size")
-        self.bank[self.ptr:self.ptr + batch_size] = embeddings
-        self.ptr = (self.ptr + batch_size) % self.size
-        if self.ptr == 0:
-            self.full = True

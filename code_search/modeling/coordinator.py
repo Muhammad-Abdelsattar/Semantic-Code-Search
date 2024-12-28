@@ -6,7 +6,7 @@ from omegaconf import DictConfig
 
 from code_search.modeling.model_manager import ModelManager, Model, FineTuningType, PEFTType
 from code_search.modeling.optimizers import OptimizerFactory
-from code_search.modeling.losses import InfoNCELoss, MemoryBank
+from code_search.modeling.losses import LossFactory, InfoNCELoss, MemoryBank
 
 class ModelingCoordinator(LightningModule):
     def __init__(self,
@@ -34,9 +34,6 @@ class ModelingCoordinator(LightningModule):
                                                  fine_tuning_type=fine_tuning_type,
                                                  peft_type=peft_type)
         return model
-
-    def _build_loss_fn(self) -> nn.Module:
-        return InfoNCELoss(**self.config.loss)
 
     def _build_memory_bank(self) -> Optional[MemoryBank]:
         if self.config.memory_bank.use_memory_bank:
