@@ -6,7 +6,7 @@ from omegaconf import DictConfig
 
 from code_search.modeling.model_manager import ModelManager, Model, FineTuningType, PEFTType
 from code_search.modeling.optimizers import OptimizerFactory
-from code_search.modeling.losses import LossFactory, InfoNCELoss, MemoryBank
+from code_search.modeling.losses import LossFactory, InfoNCELoss
 
 class ModelingCoordinator(LightningModule):
     def __init__(self,
@@ -19,7 +19,10 @@ class ModelingCoordinator(LightningModule):
         self.loss_fn = self._build_loss_fn()
 
     def _build_loss_fn(self) -> nn.Module:
-        return LossFactory.create_loss(self.config.loss)
+        loss_config = self.config.loss
+        embedding_dim = self.config.model.embedding_dim
+        loss_config["loss_args"]["embedding_dim"] = embedding_dim
+        return LossFactory.create_loss(loss_config)
 
     def _build_model(self) -> nn.Module:
         model = Model(self.config.model.model_id)

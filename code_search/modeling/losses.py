@@ -5,6 +5,45 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class InfoNCELoss(nn.Module):
+    def __init__(self,
+                 temperature: float = 0.07,
+                 embedding_dim: int):
+        super().__init__()
+        self.temperature = temperature
+        self.memory_bank = None
+        self.embedding_dim = embedding_dim
+        self.memory_bank = MemoryBank(size=65536,
+                                          embedding_dim=self.embedding_dim,
+                                          device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+
+    def forward(self,
+                query_embeddings: torch.Tensor,
+                key_embeddings: torch.Tensor,
+                normalize: bool = True) -> torch.Tensor:
+        """
+        Computes the InfoNCE loss with optional memory bank.
+        """
+        if normalize:
+            query_embeddings = F.normalize(query_embeddings, p=2, dim=1)
+            key_embeddings = F.normalize(key_embeddings, p=2, dim=1)
+
+        # Combine current key embeddings with memory bank
+        all_key_embeddings = torch.cat([key_embeddings, self.memory_bank.bank.clone().detach()], dim=0)
+        self.memory_bank.update(key_embeddings)
+
+        # Compute similarity scores
+        logits = torch.matmul(query_embeddings, all_key_embeddings.T) / self.temperature
+
+        # Create target labels
+        batch_size = key_embeddings.size(0)
+        labels = torch.arange(batch_size, device=query_embeddings.device)
+
+        # Compute cross-entropy loss
+        loss = F.cross_entropy(logits, labels)
+
+        return loss
+
 class MemoryBank:
     def __init__(self, size: int, embedding_dim: int, device: torch.device):
         self.size = size
@@ -22,51 +61,6 @@ class MemoryBank:
         self.ptr = (self.ptr + batch_size) % self.size
         if self.ptr == 0:
             self.full = True
-
-class InfoNCELoss(nn.Module):
-    def __init__(self,
-                 temperature: float = 0.07,
-                 memory_bank_size: Optional[int] = None,
-                 embedding_dim: Optional[int] = None):
-        super().__init__()
-        self.temperature = temperature
-        self.memory_bank = None
-        if memory_bank_size is not None and embedding_dim is not None:
-            self.memory_bank = MemoryBank(size=memory_bank_size,
-                                          embedding_dim=embedding_dim,
-                                          device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
-    def forward(self,
-                query_embeddings: torch.Tensor,
-                key_embeddings: torch.Tensor,
-                normalize: bool = True) -> torch.Tensor:
-        """
-        Computes the InfoNCE loss with optional memory bank.
-        """
-        if normalize:
-            query_embeddings = F.normalize(query_embeddings, p=2, dim=1)
-            key_embeddings = F.normalize(key_embeddings, p=2, dim=1)
-
-        if self.memory_bank is not None:
-            # Combine current key embeddings with memory bank
-            all_key_embeddings = torch.cat([key_embeddings, self.memory_bank.bank.clone().detach()], dim=0)
-        else:
-            all_key_embeddings = key_embeddings
-        
-        if self.memory_bank is not None:
-            self.memory_bank.update(key_embeddings)
-
-        # Compute similarity scores
-        logits = torch.matmul(query_embeddings, all_key_embeddings.T) / self.temperature
-
-        # Create target labels
-        batch_size = key_embeddings.size(0)
-        labels = torch.arange(batch_size, device=query_embeddings.device)
-
-        # Compute cross-entropy loss
-        loss = F.cross_entropy(logits, labels)
-
-        return loss
 
 class LossFactory:
     """Factory class for creating loss functions."""
