@@ -13,6 +13,7 @@ class ModelingCoordinator(LightningModule):
                  config: DictConfig):
         super().__init__()
         self.config = config
+        self.save_hyperparameters(config)
         self.model_manager = ModelManager()
         self.model = self._build_model()
         self.loss_fn = self._build_loss_fn()
