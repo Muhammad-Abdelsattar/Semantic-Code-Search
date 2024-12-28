@@ -7,15 +7,10 @@ import torch.nn.functional as F
 
 class InfoNCELoss(nn.Module):
     def __init__(self,
-                 temperature: float = 0.07,
-                 embedding_dim: int):
+                 temperature: float = 0.07):
         super().__init__()
         self.temperature = temperature
         self.memory_bank = None
-        self.embedding_dim = embedding_dim
-        self.memory_bank = MemoryBank(size=65536,
-                                          embedding_dim=self.embedding_dim,
-                                          device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     def forward(self,
                 query_embeddings: torch.Tensor,
@@ -28,12 +23,8 @@ class InfoNCELoss(nn.Module):
             query_embeddings = F.normalize(query_embeddings, p=2, dim=1)
             key_embeddings = F.normalize(key_embeddings, p=2, dim=1)
 
-        # Combine current key embeddings with memory bank
-        all_key_embeddings = torch.cat([key_embeddings, self.memory_bank.bank.clone().detach()], dim=0)
-        self.memory_bank.update(key_embeddings)
-
         # Compute similarity scores
-        logits = torch.matmul(query_embeddings, all_key_embeddings.T) / self.temperature
+        logits = torch.matmul(query_embeddings, key_embeddings.T) / self.temperature
 
         # Create target labels
         batch_size = key_embeddings.size(0)
@@ -43,24 +34,6 @@ class InfoNCELoss(nn.Module):
         loss = F.cross_entropy(logits, labels)
 
         return loss
-
-class MemoryBank:
-    def __init__(self, size: int, embedding_dim: int, device: torch.device):
-        self.size = size
-        self.embedding_dim = embedding_dim
-        self.device = device
-        self.bank = torch.zeros(size, embedding_dim, device=device)
-        self.ptr = 0
-        self.full = False
-
-    def update(self, embeddings: torch.Tensor):
-        batch_size = embeddings.size(0)
-        if(self.size % batch_size != 0):
-            raise ValueError("Batch size must be a multiple of memory bank size")
-        self.bank[self.ptr:self.ptr + batch_size] = embeddings
-        self.ptr = (self.ptr + batch_size) % self.size
-        if self.ptr == 0:
-            self.full = True
 
 class LossFactory:
     """Factory class for creating loss functions."""

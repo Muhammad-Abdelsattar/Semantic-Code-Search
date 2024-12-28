@@ -22,6 +22,7 @@ class ModelingCoordinator(LightningModule):
         loss_config = self.config.loss
         embedding_dim = self.config.model.embedding_dim
         loss_config["loss_args"]["embedding_dim"] = embedding_dim
+        loss_config["loss_args"]["embedding_dim"] = self.config.model.embedding_dim
         return LossFactory.create_loss(loss_config)
 
     def _build_model(self) -> nn.Module:
