@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from typing import Dict, Type
 import torch
 import torch.nn as nn
@@ -25,9 +25,16 @@ class MemoryBank:
 
 class InfoNCELoss(nn.Module):
     def __init__(self,
-                 temperature: float = 0.07):
+                 temperature: float = 0.07,
+                 memory_bank_size: Optional[int] = None,
+                 embedding_dim: Optional[int] = None):
         super().__init__()
         self.temperature = temperature
+        self.memory_bank = None
+        if memory_bank_size is not None and embedding_dim is not None:
+            self.memory_bank = MemoryBank(size=memory_bank_size,
+                                          embedding_dim=embedding_dim,
+                                          device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     def forward(self,
                 query_embeddings: torch.Tensor,
