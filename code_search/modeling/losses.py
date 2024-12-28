@@ -51,6 +51,8 @@ class MemoryBank:
 
     def update(self, embeddings: torch.Tensor):
         batch_size = embeddings.size(0)
+        if(self.size % batch_size != 0):
+            raise ValueError("Batch size must be a multiple of memory bank size")
         self.bank[self.ptr:self.ptr + batch_size] = embeddings
         self.ptr = (self.ptr + batch_size) % self.size
         if self.ptr == 0:
