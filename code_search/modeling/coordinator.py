@@ -20,6 +20,9 @@ class ModelingCoordinator(LightningModule):
         self.loss_fn = self._build_loss_fn()
         self.memory_bank = self._build_memory_bank()
 
+    def _build_loss_fn(self) -> nn.Module:
+        return LossFactory.create_loss(self.config.loss)
+
     def _build_model(self) -> nn.Module:
         model = Model(self.config.model.model_id)
         fine_tuning_type = FineTuningType(self.config.model.fine_tuning_type.upper())

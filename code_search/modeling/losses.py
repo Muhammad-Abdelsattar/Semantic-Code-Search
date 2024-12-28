@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import Dict, Type
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -39,6 +40,22 @@ class InfoNCELoss(nn.Module):
         loss = F.cross_entropy(logits, labels)
 
         return loss
+
+class LossFactory:
+    """Factory class for creating loss functions."""
+    LOSS_MAPPING: Dict[str, Type[nn.Module]] = {
+        "InfoNCE": InfoNCELoss
+    }
+
+    @classmethod
+    def create_loss(cls,
+                    config: Dict) -> nn.Module:
+        loss_name = config.name
+        loss_args = config.get("loss_args", {})
+        loss_class = cls.LOSS_MAPPING.get(loss_name)
+        if not loss_class:
+            raise ValueError(f"Unsupported loss function: {loss_name}")
+        return loss_class(**loss_args)
 
 class MemoryBank:
     def __init__(self, size: int, embedding_dim: int, device: torch.device):
