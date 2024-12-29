@@ -11,12 +11,15 @@ class CodeSearchTokenizer:
         """
         self.tokenizer = AutoTokenizer.from_pretrained(config.model.model_id)
 
-    def tokenize(self, queries: List[str], codes: List[str]):
+    def tokenize(self, queries: List[str], codes: List[str], max_length=512, padding=True, truncation=True):
         """Tokenizes the queries and codes.
 
         Args:
             queries: A list of query strings.
             codes: A list of code strings.
+            max_length: The maximum length of the tokenized sequences.
+            padding: Whether to pad the sequences to the maximum length.
+            truncation: Whether to truncate the sequences to the maximum length.
 
         Returns:
             A dictionary containing the tokenized inputs.
@@ -24,8 +27,9 @@ class CodeSearchTokenizer:
         tokenized_inputs = self.tokenizer(
             queries,
             codes,
-            padding=True,
-            truncation=True,
+            padding=padding,
+            truncation=truncation,
+            max_length=max_length,
             return_tensors="pt"
         )
         return tokenized_inputs
