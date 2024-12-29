@@ -40,7 +40,7 @@ class OptimizerFactory:
             valid_args = {k: v for k, v in optimizer_config.optimizer_args.items() if k not in ["betas"]}
         
         optimizer = optimizer_class(params=model.parameters(),
-                                    lr=learning_rate,
+                                    lr=valid_args.learning_rate,
                                     **valid_args)
         return optimizer
 

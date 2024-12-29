@@ -1,0 +1,6 @@
+outs:
+- md5: 73f832a25fc4d1836628ec12c8052f90.dir
+  size: 5045083
+  nfiles: 2
+  hash: md5
+  path: go

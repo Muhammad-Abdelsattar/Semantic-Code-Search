@@ -1,12 +1,10 @@
-from typing import Optional
 import torch
 import torch.nn as nn
 from lightning import LightningModule
 from omegaconf import DictConfig
-
-from code_search.modeling.model_manager import ModelManager, Model, FineTuningType, PEFTType
-from code_search.modeling.optimizers import OptimizerFactory
-from code_search.modeling.losses import LossFactory, InfoNCELoss
+from .model_manager import ModelManager, Model, FineTuningType, PEFTType
+from .optimizers import OptimizerFactory
+from .losses import LossFactory
 
 class ModelingCoordinator(LightningModule):
     def __init__(self,
@@ -45,11 +43,22 @@ class ModelingCoordinator(LightningModule):
                                                       config=self.config.optimizer)
         return [optimizer], [scheduler]
 
+    def _common_step(self,
+                     batch,
+                     batch_idx,
+                     mode: str):
+        query = batch["query"]
+        code = batch["code"]
+        query_outputs = self.model(**query)
+        code_outputs = self.model(**code)
+        query_embeddings = torch.mean(query_outputs, dim=1)
+        code_embeddings = torch.mean(code_outputs, dim=1)
+        loss = self.loss_fn(query_embeddings, code_embeddings)
+        self.log(f"{mode}_loss", loss)
+        return loss
+
     def training_step(self, batch, batch_idx):
-        raise NotImplementedError("Training step needs to be implemented")
+        return self._common_step(batch, batch_idx, "train")
 
     def validation_step(self, batch, batch_idx):
-        raise NotImplementedError("Validation step needs to be implemented")
-
-    def test_step(self, batch, batch_idx):
-         raise NotImplementedError("Test step needs to be implemented")
+        return self._common_step(batch, batch_idx, "val")

@@ -1,11 +1,13 @@
+from typing import List
 import json
 import pandas as pd
-from typing import List
+from omegaconf import DictConfig
+from transformers import PreTrainedTokenizer, AutoTokenizer
 from torch.utils.data import Dataset
-from code_search.data.tokenizer import CodeSearchTokenizer
 
 class CodeSearchDataset(Dataset):
-    def __init__(self, file_paths: List[str], tokenizer: CodeSearchTokenizer):
+    def __init__(self,
+                 config: DictConfig,):
         """
         Initializes the dataset.
 
@@ -13,25 +15,20 @@ class CodeSearchDataset(Dataset):
             file_paths: A list of paths to JSONL files.
             tokenizer: A CodeSearchTokenizer instance.
         """
-        self.data = self._load_data_from_jsonl(file_paths)
-        self.tokenizer = tokenizer
+        self.config = config
+        self.data = self._load_data_from_jsonl(self.config.file_paths)
 
     def _load_data_from_jsonl(self, file_paths: List[str]) -> pd.DataFrame:
         """Loads data from one or more JSONL files into a pandas DataFrame."""
         all_data = []
         for file_path in file_paths:
-            with open(file_path, 'r') as f:
-                for line in f:
-                    try:
-                        json_line = json.loads(line)
-                        all_data.append(json_line)
-                    except json.JSONDecodeError:
-                        print(f"Warning: Skipping invalid JSON line in {file_path}: {line}")
-                        continue
-        df = pd.DataFrame(all_data)
-        if 'query' not in df.columns or 'code' not in df.columns:
-            raise ValueError("JSONL files must contain 'query' and 'code' fields.")
-        return df
+            try:
+                data = pd.read_json(file_path, lines=True)
+                all_data.append(data)
+            except ValueError:
+                print(f"Warning: File wans't read: {file_path}")
+                continue
+        return pd.concat(all_data, ignore_index=True)
 
     def __len__(self):
         """Returns the length of the dataset."""
@@ -50,5 +47,7 @@ class CodeSearchDataset(Dataset):
         item = self.data.iloc[idx]
         query = item['query']
         code = item['code']
-        tokenized_inputs = self.tokenizer.tokenize([query], [code])
-        return tokenized_inputs
+        return {
+            "query": query,
+            "code": code
+        }

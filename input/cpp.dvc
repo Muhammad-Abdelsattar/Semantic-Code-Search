@@ -1,0 +1,6 @@
+outs:
+- md5: 7c0eaecb7cbdd543b2f355e35b6aad08.dir
+  size: 5582170
+  nfiles: 2
+  hash: md5
+  path: cpp

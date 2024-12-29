@@ -1,2 +1,7 @@
 [core]
     analytics = false
+    remote = data
+['remote "data"']
+    url = gdrive://1iY4LRrDh-4k2QUfKsFd4y2QGqkZZdACO
+    gdrive_use_service_account = true
+    gdrive_acknowledge_abuse = true

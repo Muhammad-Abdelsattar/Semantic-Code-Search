@@ -1,0 +1,6 @@
+outs:
+- md5: c7f7abc0d61710e20743a5cdd9b3d1db.dir
+  size: 5304830
+  nfiles: 2
+  hash: md5
+  path: java

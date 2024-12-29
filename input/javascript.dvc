@@ -1,0 +1,6 @@
+outs:
+- md5: 5805f1d63bd7ec63be05994929d218ac.dir
+  size: 3948464
+  nfiles: 2
+  hash: md5
+  path: javascript
