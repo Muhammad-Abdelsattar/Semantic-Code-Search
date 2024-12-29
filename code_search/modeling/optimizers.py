@@ -23,8 +23,7 @@ class OptimizerFactory:
     @classmethod
     def create_optimizer(cls,
                          model: nn.Module,
-                         config: DictConfig,
-                         learning_rate: float) -> torch.optim.Optimizer:
+                         config: DictConfig,) -> torch.optim.Optimizer:
         """Creates an optimizer based on the given configuration."""
         optimizer_config = config.optimizer.optimizer
         optimizer_name = optimizer_config.name.lower()
@@ -40,7 +39,6 @@ class OptimizerFactory:
             valid_args = {k: v for k, v in optimizer_config.optimizer_args.items() if k not in ["betas"]}
         
         optimizer = optimizer_class(params=model.parameters(),
-                                    lr=valid_args.learning_rate,
                                     **valid_args)
         return optimizer
 
@@ -57,7 +55,7 @@ class OptimizerFactory:
 
         scheduler_args = {k: v for k, v in scheduler_config.scheduler_args.items() if k not in ["start_factor", "end_factor", "total_iters", "total_epochs"]}
         main_scheduler = scheduler_class(optimizer=optimizer,
-                                    **scheduler_args)
+                                         **scheduler_args)
         
         if "warmup" in config.optimizer and config.optimizer.warmup:
             warmup_config = config.optimizer.warmup
