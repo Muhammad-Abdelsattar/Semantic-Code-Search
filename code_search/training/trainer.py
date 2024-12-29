@@ -41,7 +41,7 @@ def train(config: DictConfig):
         callbacks=[checkpoint_callback],
     )
     
-    trainer.fit(model, datamodule=data_module)
+    trainer.fit(model, datamodule=data_manager)
     
 if __name__ == "__main__":
     from omegaconf import OmegaConf
