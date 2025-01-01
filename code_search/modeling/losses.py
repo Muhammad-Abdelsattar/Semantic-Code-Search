@@ -47,7 +47,9 @@ class InfoNCELoss(nn.Module):
             key_embeddings = F.normalize(key_embeddings, p=2, dim=1)
 
         if self.bank is not None:
-            all_key_embeddings = torch.cat([key_embeddings, self.bank.bank.detach().to(key_embeddings.device)], dim=0)
+            all_key_embeddings = torch.cat([key_embeddings, 
+                                            self.bank.bank.detach().to(device=key_embeddings.device,
+                                                                       dtype=key_embeddings.dtype)], dim=0)
         else:
             all_key_embeddings = key_embeddings
         # Compute similarity scores
