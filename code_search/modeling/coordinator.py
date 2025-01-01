@@ -20,12 +20,10 @@ class ModelingCoordinator(LightningModule):
 
     def _build_loss_fn(self) -> nn.Module:
         loss_config = self.config.loss
-        loss_config.loss_args.embeddings_dim = self.embeddings_dim
         return LossFactory.create_loss(loss_config)
 
     def _build_model(self) -> nn.Module:
         model = AutoModel.from_pretrained(self.config.model.model_id, trust_remote_code=True)
-        self.embeddings_dim = model.config.hidden_size #Usefule for other modules.
         model_manager = ModelManager()
         model = model_manager.prepare_model(model=model,
                                             config=self.config.model,)
