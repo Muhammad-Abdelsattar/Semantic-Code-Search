@@ -50,13 +50,12 @@ class InfoNCELoss(nn.Module):
             all_key_embeddings = torch.cat([key_embeddings, 
                                             self.bank.bank.detach().to(device=key_embeddings.device,
                                                                        dtype=key_embeddings.dtype)],
-                                           dim=0,
-                                           dtype=key_embeddings.dtype)
+                                           dim=0,)
         else:
             all_key_embeddings = key_embeddings
         # Compute similarity scores
 
-        logits = torch.matmul(query_embeddings, all_key_embeddings.T) / self.temperature
+        logits = torch.matmul(query_embeddings, all_key_embeddings.to(dtype=query_embeddings.dtype).T) / self.temperature
 
         if self.bank is not None:
             self.bank.update(key_embeddings)
