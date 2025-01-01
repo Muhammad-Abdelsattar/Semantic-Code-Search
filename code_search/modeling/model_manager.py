@@ -101,8 +101,8 @@ class ModelManager:
                 model = strategy.prepare_model(model, config.fine_tuning.peft)
             else:
                 model = strategy.prepare_model(model, config.fine_tuning.full)
-            # return model
-            return torch.compile(model)
+            return model
+            # return torch.compile(model)
 
         elif stage == "inference":
             raise NotImplementedError("Inference stage is not implemented yet.")
