@@ -8,15 +8,15 @@ from peft import (PeftModel, PeftConfig, PrefixTuningConfig,
 from omegaconf import DictConfig
 from typing import Optional, Dict, Type
 
-class FineTuningType(Enum):
+class FineTuningType(str,Enum):
     """Supported Fine-Tuning methods."""
-    PEFT = auto()
-    FULL = auto()
+    PEFT = "PEFT"
+    FULL = "FULL"
 
-class PEFTType(Enum):
+class PEFTType(str,Enum):
     """Supported Parameter-Efficient Fine-Tuning methods."""
-    PREFIX = auto()
-    LORA = auto()
+    PREFIX = "PREFIX"
+    LORA = "LORA"
 
 class PEFTConfigFactory:
     """Factory for creating PEFT configurations using static mapping"""
@@ -84,31 +84,25 @@ class ModelManager:
     def prepare_model(self,
                      model: nn.Module,
                      config: DictConfig,
-                     fine_tuning_type: FineTuningType,
-                     peft_type: Optional[PEFTType] = None,
+                    #  fine_tuning_type: FineTuningType,
+                    #  peft_type: Optional[PEFTType] = None,
                      stage: str = "fine_tuning") -> nn.Module:
         if stage == "fine_tuning":
-            model = model.encoder
+            if(len(config.fine_tuning.use.split("/")) == 2):
+                peft_type = config.fine_tuning.use.split("/")[1].upper()
+            else:
+                peft_type = None
+            fine_tuning_type = config.fine_tuning.use.split("/")[0].upper()
             strategy = self.strategies.get((fine_tuning_type, peft_type))
             if not strategy:
                 raise ValueError(f"Unsupported fine-tuning type: {fine_tuning_type} and peft type: {peft_type}")
             
             if fine_tuning_type == FineTuningType.PEFT:
-                return strategy.prepare_model(model, config.peft)
+                model = strategy.prepare_model(model, config.fine_tuning.peft)
             else:
-                return strategy.prepare_model(model, config.full)
+                model = strategy.prepare_model(model, config.fine_tuning.full)
+            # return model
+            return torch.compile(model)
+
         elif stage == "inference":
             raise NotImplementedError("Inference stage is not implemented yet.")
-
-
-class Model(nn.Module):
-    def __init__(self,
-                 model_id:str):
-        super(Model, self).__init__()
-        self.encoder = AutoModel.from_pretrained(model_id,
-                                                 trust_remote_code=True)
-        
-    def forward(self,
-                input_dict:dict[str, torch.Tensor]) -> torch.Tensor:
-        outputs = self.encoder(**input_dict)
-        return outputs.last_hidden_state

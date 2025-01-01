@@ -18,6 +18,7 @@ def config():
     model:
       model_id: "jinaai/jina-embeddings-v2-base-code"
       fine_tuning:
+        use: "peft/lora"
         full:
           layers: 2
           train_embeddings: false
@@ -46,14 +47,15 @@ def model_manager():
     return ModelManager()
 
 def test_full_fine_tuning(model_manager, model, config):
+    config.model.fine_tuning.use = "full"
     
     prepared_model = model_manager.prepare_model(model=model,
-                                                 config=config.model.fine_tuning,
-                                                 fine_tuning_type=FineTuningType.FULL)
+                                                 config=config.model.fine_tuning,)
     
     assert isinstance(prepared_model, torch.nn.Module)
     
     num_layers = len(prepared_model.encoder.layer)
+    print(prepared_model.config)
     
     if config.model.fine_tuning.full.layers == -1:
         trainable_layers = [f"encoder.layer.{i}" for i in range(num_layers)]
@@ -71,11 +73,12 @@ def test_full_fine_tuning(model_manager, model, config):
             assert False
 
 def test_full_fine_tuning_trainable_embeddings(model_manager, model, config):
+    config.model.fine_tuning.use = "full"
     config.model.fine_tuning.full.train_embeddings = True
     prepared_model = model_manager.prepare_model(model=model,
-                                                 config=config.model.fine_tuning,
-                                                 fine_tuning_type=FineTuningType.FULL)
+                                                 config=config.model.fine_tuning,)
     
+    print(prepared_model.config)
     assert isinstance(prepared_model, torch.nn.Module)
     
     # Check if all layers are trainable
@@ -86,11 +89,12 @@ def test_full_fine_tuning_trainable_embeddings(model_manager, model, config):
             assert param.requires_grad == True
         
 def test_full_fine_tuning_all_layers(model_manager, model, config):
+    config.model.fine_tuning.use = "full"
     config.model.fine_tuning.full.layers = -1
     prepared_model = model_manager.prepare_model(model=model,
-                                                 config=config.model.fine_tuning,
-                                                 fine_tuning_type=FineTuningType.FULL)
+                                                 config=config.model.fine_tuning,)
     
+    print(prepared_model.config)
     assert isinstance(prepared_model, torch.nn.Module)
     
     # Check if all layers are trainable
@@ -103,11 +107,12 @@ def test_full_fine_tuning_all_layers(model_manager, model, config):
             assert param.requires_grad == False
 
 def test_full_fine_tuning_no_layers(model_manager, model, config):
+    config.model.fine_tuning.use = "full"
     config.model.fine_tuning.full.layers = 0
     prepared_model = model_manager.prepare_model(model=model,
-                                                 config=config.model.fine_tuning,
-                                                 fine_tuning_type=FineTuningType.FULL)
+                                                 config=config.model.fine_tuning,)
     
+    print(prepared_model.config)
     assert isinstance(prepared_model, torch.nn.Module)
     
     # Check if no layers are trainable
@@ -118,10 +123,10 @@ def test_full_fine_tuning_no_layers(model_manager, model, config):
             assert param.requires_grad == False
 
 def test_lora_fine_tuning(model_manager, model, config):
+    config.model.fine_tuning.use = "peft/lora"
     prepared_model = model_manager.prepare_model(model=model,
-                                                 config=config.model.fine_tuning,
-                                                 fine_tuning_type=FineTuningType.PEFT,
-                                                 peft_type=PEFTType.LORA)
+                                                 config=config.model.fine_tuning,)
+    print(prepared_model.config)
     assert isinstance(prepared_model, torch.nn.Module)
     assert hasattr(prepared_model, 'base_model')
     for name, param in prepared_model.named_parameters():
@@ -129,10 +134,10 @@ def test_lora_fine_tuning(model_manager, model, config):
             assert param.requires_grad == False
 
 def test_prefix_fine_tuning(model_manager, model, config):
+    config.model.fine_tuning.use = "peft/prefix"
     prepared_model = model_manager.prepare_model(model=model,
-                                                 config=config.model.fine_tuning,
-                                                 fine_tuning_type=FineTuningType.PEFT,
-                                                 peft_type=PEFTType.PREFIX)
+                                                 config=config.model.fine_tuning,)
+    print(prepared_model.config)
     assert isinstance(prepared_model, torch.nn.Module)
     assert hasattr(prepared_model, 'base_model')
     for name, param in prepared_model.named_parameters():
@@ -143,5 +148,4 @@ def test_invalid_stage(model_manager, model, config):
     with pytest.raises(NotImplementedError, match="Inference stage is not implemented yet."):
         model_manager.prepare_model(model=model,
                                     config=config.model.fine_tuning,
-                                    fine_tuning_type=FineTuningType.FULL,
                                     stage="inference")

@@ -7,28 +7,9 @@ from torch.utils.data import Dataset
 
 class CodeSearchDataset(Dataset):
     def __init__(self,
-                 config: DictConfig,):
-        """
-        Initializes the dataset.
+                 data: pd.DataFrame,):
 
-        Args:
-            file_paths: A list of paths to JSONL files.
-            tokenizer: A CodeSearchTokenizer instance.
-        """
-        self.config = config
-        self.data = self._load_data_from_jsonl(self.config.file_paths)
-
-    def _load_data_from_jsonl(self, file_paths: List[str]) -> pd.DataFrame:
-        """Loads data from one or more JSONL files into a pandas DataFrame."""
-        all_data = []
-        for file_path in file_paths:
-            try:
-                data = pd.read_json(file_path, lines=True)
-                all_data.append(data)
-            except ValueError:
-                print(f"Warning: File wans't read: {file_path}")
-                continue
-        return pd.concat(all_data, ignore_index=True)
+        self.data = data
 
     def __len__(self):
         """Returns the length of the dataset."""

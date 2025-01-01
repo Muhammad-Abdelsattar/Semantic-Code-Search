@@ -1,6 +1,6 @@
 from lightning.pytorch.callbacks import (ModelCheckpoint,
                                          ModelSummary,
-                                         ProgressBar)
+                                         TQDMProgressBar)
 from lightning.pytorch.loggers import WandbLogger
 
 
@@ -11,7 +11,7 @@ callbacks = [
                      save_top_k=1,
                      mode="min"),
     ModelSummary(max_depth=1),
-    ProgressBar(),
+    TQDMProgressBar(refresh_rate=1),
 ]
 
-logger = WandbLogger(project="code-search",)
+logger = WandbLogger(project="code-search")

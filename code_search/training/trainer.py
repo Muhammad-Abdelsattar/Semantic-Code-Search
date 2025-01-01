@@ -1,7 +1,7 @@
 import os
 from omegaconf import DictConfig
 import lightning as L
-from utils import callbacks, logger
+from .utils import callbacks, logger
 
 class TrainingManager:
     def __init__(self, config: DictConfig):
@@ -19,5 +19,9 @@ class TrainingManager:
     
     def train(self,
               modeling_coordinator: L.LightningModule,
-              data_module: L.LightningDataModule):
-        self.trainer.fit(self.modeling_coordinator, datamodule=self.data_module)
+              datamodule: L.LightningDataModule,
+              ckpt_path: str = None):
+
+        self.trainer.fit(modeling_coordinator,
+                            datamodule=datamodule,
+                            ckpt_path=ckpt_path)

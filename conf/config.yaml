@@ -2,6 +2,8 @@ modeling:
   model:
     model_id: &id "jinaai/jina-embeddings-v2-base-code"
     fine_tuning:
+      use: "full"
+
       full:
         layers: 2 #indicates the num of layers(last layers) to be trained. {0->no layers -1->all layers}
         train_embeddings: false
@@ -21,8 +23,7 @@ modeling:
   loss:
     name: "InfoNCE"
     loss_args:
-      memory_bank_size: 1024
-      embedding_dim: 768
+      bank_size: 1024
       temperature: 0.07
   optimizer:
     optimizer:
@@ -34,28 +35,26 @@ modeling:
     scheduler:
       name: "linear"
       scheduler_args:
-        start_factor: 1/3
+        start_factor: 0.3
         end_factor: 1.0
         total_iters: 1000
     warmup:
-      warmup_steps: 100 # or warmup_epochs
+      warmup_steps: 50 # or warmup_epochs
       start_factor: 1/3
 
 data:
   tokenizer_id: *id
   batch_size: 32
-  files:
-    - "./input/python/train.jsonl"
-  train_dataset:
-    portion: 0.9
-  validation_dataset:
-    portion: 0.1
+  train_val_files:
+    - "../input/python/train.jsonl"
+  train_split: 0.9
 
 trainer:
   max_epochs: 10
-  accumulate_grad_batches: 1
-  precision: "16-mixed"
+  accumulate_grad_batches: 8
+  precision: "32"
   gradient_clip_val: 0.5
-  devices: 2
-  accelerator: "gpu"
-  strategy: "ddp"
+  gradient_clip_algorithm: "norm"
+  devices: "auto"
+  accelerator: "auto"
+  strategy: "auto"

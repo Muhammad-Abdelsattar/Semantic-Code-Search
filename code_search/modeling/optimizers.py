@@ -25,7 +25,7 @@ class OptimizerFactory:
                          model: nn.Module,
                          config: DictConfig,) -> torch.optim.Optimizer:
         """Creates an optimizer based on the given configuration."""
-        optimizer_config = config.optimizer.optimizer
+        optimizer_config = config.optimizer
         optimizer_name = optimizer_config.name.lower()
         optimizer_class = cls.OPTIMIZER_MAPPING.get(optimizer_name)
         if not optimizer_class:
@@ -47,7 +47,7 @@ class OptimizerFactory:
                          optimizer: torch.optim.Optimizer,
                          config: DictConfig) -> torch.optim.lr_scheduler._LRScheduler:
         """Creates a learning rate scheduler based on the given configuration."""
-        scheduler_config = config.optimizer.scheduler
+        scheduler_config = config.scheduler
         scheduler_name = scheduler_config.name.lower()
         scheduler_class = cls.SCHEDULER_MAPPING.get(scheduler_name)
         if not scheduler_class:
